@@ -1,0 +1,38 @@
+version: 2
+
+models:
+  - name: deepbook_margin_deposit_collateral
+    columns:
+      - name: transaction_digest
+        tests:
+          - not_null
+      - name: event_index
+        tests:
+          - not_null
+      - name: timestamp_ms
+        tests:
+          - not_null
+      - name: amount
+        tests:
+          - not_null
+      - name: margin_manager_id
+        tests:
+          - not_null
+
+  - name: deepbook_margin_loan_borrowed
+    columns:
+      - name: transaction_digest
+        tests:
+          - not_null
+      - name: event_index
+        tests:
+          - not_null
+      - name: timestamp_ms
+        tests:
+          - not_null
+      - name: loan_amount
+        tests:
+          - not_null
+      - name: margin_manager_id
+        tests:
+          - not_null

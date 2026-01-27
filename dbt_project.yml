@@ -1,0 +1,22 @@
+name: 'deepbook_margin'
+version: '1.0.0'
+
+profile: 'deepbook_margin'
+
+flags:
+  require_certificate_validation: true
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  deepbook_margin:
+    +view_security: invoker
