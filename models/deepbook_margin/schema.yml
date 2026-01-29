@@ -1,25 +1,38 @@
 version: 2
 
+# Mainnet Package: 0x97d9473771b01f77b0940c589484184b49f6444627ec121314fae6a6d36fb86b
+
 models:
+  # ==========================================================================
+  # EVENT MODELS
+  # ==========================================================================
+
   - name: deepbook_margin_deposit_collateral
+    description: "Collateral deposits to margin positions"
     columns:
       - name: transaction_digest
+        description: "Sui transaction digest"
         tests:
           - not_null
       - name: event_index
+        description: "Event index within transaction"
         tests:
           - not_null
       - name: timestamp_ms
-        tests:
-          - not_null
-      - name: amount
+        description: "Unix timestamp in milliseconds"
         tests:
           - not_null
       - name: margin_manager_id
+        description: "Margin manager ID"
+        tests:
+          - not_null
+      - name: amount
+        description: "Collateral amount in native units"
         tests:
           - not_null
 
   - name: deepbook_margin_loan_borrowed
+    description: "Margin loans taken from lending pools"
     columns:
       - name: transaction_digest
         tests:
@@ -30,9 +43,170 @@ models:
       - name: timestamp_ms
         tests:
           - not_null
+      - name: margin_manager_id
+        description: "Margin manager ID"
+      - name: margin_pool_id
+        description: "Lending pool providing liquidity"
       - name: loan_amount
+        description: "Amount borrowed in native units"
+        tests:
+          - not_null
+
+  - name: deepbook_margin_loan_repaid
+    description: "Margin loan repayments"
+    columns:
+      - name: transaction_digest
+        tests:
+          - not_null
+      - name: event_index
+        tests:
+          - not_null
+      - name: timestamp_ms
         tests:
           - not_null
       - name: margin_manager_id
+        description: "Margin manager ID"
+      - name: margin_pool_id
+        description: "Pool receiving repayment"
+      - name: repay_amount
+        description: "Amount repaid in native units"
+      - name: repay_shares
+        description: "Shares burned during repayment"
+
+  - name: deepbook_margin_pool_asset_supplied
+    description: "Liquidity provision to margin pools"
+    columns:
+      - name: transaction_digest
         tests:
           - not_null
+      - name: event_index
+        tests:
+          - not_null
+      - name: timestamp_ms
+        tests:
+          - not_null
+      - name: margin_pool_id
+        description: "Pool receiving liquidity"
+      - name: supplier_cap_id
+        description: "Supplier's capability token"
+      - name: asset_type
+        description: "Asset type supplied"
+      - name: supply_amount
+        description: "Amount supplied in native units"
+      - name: supply_shares
+        description: "Shares minted to supplier"
+
+  - name: deepbook_margin_pool_asset_withdrawn
+    description: "Liquidity removal from margin pools"
+    columns:
+      - name: transaction_digest
+        tests:
+          - not_null
+      - name: event_index
+        tests:
+          - not_null
+      - name: timestamp_ms
+        tests:
+          - not_null
+      - name: margin_pool_id
+        description: "Pool being withdrawn from"
+      - name: supplier_cap_id
+        description: "Supplier's capability token"
+      - name: asset_type
+        description: "Asset type withdrawn"
+      - name: withdraw_amount
+        description: "Amount withdrawn in native units"
+      - name: withdraw_shares
+        description: "Shares burned during withdrawal"
+
+  # ==========================================================================
+  # STAGING MODELS
+  # ==========================================================================
+
+  - name: stg_deepbook_margin_pool_object
+    description: |
+      DeepBook Margin Pool Object Staging.
+
+      Extracts margin pool object state from sui.objects.
+      Each row represents a mutation (version change) of a margin pool object.
+
+      Use Cases:
+      - Source for daily snapshots
+      - Historical tracking of pool state changes
+      - Granular analysis of pool parameter updates
+    columns:
+      - name: object_id
+        description: "Unique object identifier"
+        tests:
+          - not_null
+      - name: version
+        description: "Object version number"
+        tests:
+          - not_null
+      - name: margin_pool_id
+        description: "Margin pool ID (from object JSON)"
+      - name: asset_type
+        description: "Asset type the pool holds"
+      - name: total_supply
+        description: "Total supply in raw units"
+      - name: total_borrow
+        description: "Total borrowed in raw units"
+      - name: utilization_rate
+        description: "Utilization rate (borrow/supply)"
+      - name: snapshot_date
+        description: "Date of the object mutation"
+
+  # ==========================================================================
+  # DAILY FACT MODELS
+  # ==========================================================================
+
+  - name: fct_deepbook_margin_pool_daily
+    description: |
+      DeepBook Margin Pool Daily Snapshots with USD Pricing.
+
+      End-of-day pool metrics for easy consumption, including:
+      - TVL and borrowing in native tokens and USD
+      - Daily volumes in native tokens and USD
+      - Utilization rates and day-over-day changes
+      - Price data from Dune's prices.day table
+
+      Grain: One row per margin_pool_id per snapshot_date
+    columns:
+      - name: snapshot_date
+        description: "UTC day of the snapshot"
+        tests:
+          - not_null
+      - name: margin_pool_id
+        description: "Unique margin pool identifier"
+        tests:
+          - not_null
+      - name: coin_symbol
+        description: "Symbol of the pool's asset (SUI, USDC, DEEP)"
+      - name: total_supply_normalized
+        description: "Total supply in native token units"
+      - name: total_borrow_normalized
+        description: "Total borrowed in native token units"
+      - name: price_usd
+        description: "Token price in USD (from prices.day, 1.0 for stablecoins)"
+      - name: total_supply_usd
+        description: "Total supply value in USD"
+      - name: total_borrow_usd
+        description: "Total borrowed value in USD"
+      - name: utilization_rate
+        description: "Pool utilization rate (borrow/supply)"
+      - name: daily_supply_volume
+        description: "Daily supply volume in native token units"
+      - name: daily_supply_volume_usd
+        description: "Daily supply volume in USD"
+      - name: daily_borrow_volume
+        description: "Daily borrow volume in native token units"
+      - name: daily_borrow_volume_usd
+        description: "Daily borrow volume in USD"
+      - name: daily_supply_change
+        description: "Day-over-day supply change (native tokens)"
+      - name: daily_borrow_change
+        description: "Day-over-day borrow change (native tokens)"
+      - name: active_positions_count
+        description: "Number of active margin positions"
+      - name: updated_at
+        description: "Timestamp when this record was last updated"

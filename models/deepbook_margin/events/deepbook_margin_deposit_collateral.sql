@@ -19,6 +19,9 @@ with raw_events as (
     where event_type = '0x97d9473771b01f77b0940c589484184b49f6444627ec121314fae6a6d36fb86b::margin_manager::DepositCollateralEvent'
     {% if is_incremental() %}
       and timestamp_ms >= (select coalesce(max(timestamp_ms), 0) from {{ this }})
+    {% else %}
+      -- Initial backfill: limit to last 30 days to prevent timeout
+      and timestamp_ms >= cast(to_unixtime(now() - interval '30' day) * 1000 as bigint)
     {% endif %}
 )
 

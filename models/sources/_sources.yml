@@ -2,5 +2,9 @@ version: 2
 
 sources:
   - name: sui
+    description: "Sui blockchain raw data"
     tables:
       - name: events
+        description: "Event data emitted by smart contracts on Sui"
+      - name: objects
+        description: "Object state data on Sui blockchain"
